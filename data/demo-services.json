@@ -1,0 +1,114 @@
+[
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Golden Hour Studio",
+    "category": "Photography & Videography",
+    "description": "Natural, sunlit wedding photography focused on candid moments and thoughtful portraits.",
+    "price": 2800,
+    "location": "Brooklyn, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Ever After Films",
+    "category": "Photography & Videography",
+    "description": "Cinematic wedding films capturing the quiet glances, happy tears, and dance-floor joy.",
+    "price": 2400,
+    "location": "Stamford, CT",
+    "images": [
+      "https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "The Willow Estate",
+    "category": "Wedding Venues",
+    "description": "A garden estate with a light-filled glasshouse, mature trees, and space for an intimate celebration.",
+    "price": 7200,
+    "location": "Hudson Valley, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Bloom & Gather",
+    "category": "Decoration & Florist",
+    "description": "Seasonal, garden-inspired flowers and carefully considered details designed around your palette.",
+    "price": 1450,
+    "location": "Queens, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Little Olive Catering",
+    "category": "Catering Services",
+    "description": "A generous seasonal menu and warm, attentive service for a relaxed reception dinner.",
+    "price": 95,
+    "location": "Long Island, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Soft Glow Beauty",
+    "category": "Makeup & Styling",
+    "description": "A calm, personalized beauty service with on-location makeup and hairstyling for your wedding morning.",
+    "price": 350,
+    "location": "Manhattan, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "Heirloom Atelier",
+    "category": "Wedding Fashion",
+    "description": "A welcoming bridal atelier offering thoughtful tailoring and timeless silhouettes made personal.",
+    "price": 1800,
+    "location": "Brooklyn, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1594552072238-b8a33785b261?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  },
+  {
+    "vendorId": { "$oid": "000000000000000000000001" },
+    "serviceName": "The Wildflower Table",
+    "category": "Catering Services",
+    "description": "Farm-to-table food, seasonal ingredients, and friendly hospitality for a memorable gathering.",
+    "price": 110,
+    "location": "Beacon, NY",
+    "images": [
+      "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=960&q=85"
+    ],
+    "status": "approved",
+    "isActive": true,
+    "createdAt": { "$date": "2026-11-18T00:00:00.000Z" }
+  }
+]
