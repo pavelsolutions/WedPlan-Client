@@ -21,6 +21,7 @@ function getApiRoot() {
   const configuredUrl =
     process.env.WEDPLAN_API_URL?.trim() ||
     process.env.NEXT_PUBLIC_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
     (process.env.NODE_ENV === "development"
       ? "http://localhost:5000/api"
       : "");

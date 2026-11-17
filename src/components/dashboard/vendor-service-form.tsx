@@ -75,11 +75,31 @@ export default function VendorServiceForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    if (serviceName.trim().length < 2 || serviceName.trim().length > 120) {
+      setError("Service name must be between 2 and 120 characters.");
+      return;
+    }
     if (!category) {
       setError("Choose a service category.");
       return;
     }
-    if (!price.trim() || !Number.isFinite(Number(price)) || Number(price) < 0) {
+    if (
+      description.trim().length < 10 ||
+      description.trim().length > 5000
+    ) {
+      setError("Description must be between 10 and 5000 characters.");
+      return;
+    }
+    if (location.trim().length < 2 || location.trim().length > 160) {
+      setError("Location must be between 2 and 160 characters.");
+      return;
+    }
+    if (
+      !price.trim() ||
+      !Number.isFinite(Number(price)) ||
+      Number(price) < 0 ||
+      Number(price) > 1_000_000_000
+    ) {
       setError("Enter a valid service price.");
       return;
     }
