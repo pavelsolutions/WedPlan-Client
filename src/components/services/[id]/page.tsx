@@ -1,11 +1,1 @@
-import React from 'react';
-
-const ServiceDetailsPage = () => {
-    return (
-        <div>
-            ServiceDetailsPage
-        </div>
-    );
-};
-
-export default ServiceDetailsPage;
+export { default, ServiceDetailsSkeleton } from "../service-detail-page";

@@ -1,99 +1,105 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Heart, LogOut, Sparkles } from "lucide-react";
-import { signOut } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Heart, Sparkles } from "lucide-react";
+import type { DashboardRole } from "@/lib/dashboard-session";
+import { dashboardNavigation } from "@/lib/dashboard-navigation";
 
 type DashboardWelcomeProps = {
-  name: string;
-  role: "customer" | "vendor";
+  role: DashboardRole;
 };
 
-export default function DashboardWelcome({
-  name,
-  role,
-}: DashboardWelcomeProps) {
-  const router = useRouter();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isVendor = role === "vendor";
+const welcomeCopy: Record<
+  DashboardRole,
+  { eyebrow: string; title: string; description: string; action: string; href: string }
+> = {
+  admin: {
+    eyebrow: "PLATFORM OVERVIEW",
+    title: "Keep every WedPlan detail in good hands.",
+    description:
+      "Manage members, review service listings, and keep an eye on platform activity from one workspace.",
+    action: "Manage users",
+    href: "/dashboard/admin/users",
+  },
+  vendor: {
+    eyebrow: "YOUR VENDOR SPACE",
+    title: "Let the right couples find your work.",
+    description:
+      "Showcase your services, keep your business profile current, and stay close to the requests coming your way.",
+    action: "Add a service",
+    href: "/dashboard/vendor/services/new",
+  },
+  customer: {
+    eyebrow: "YOUR WEDPLAN",
+    title: "Your day, your way.",
+    description:
+      "Explore trusted wedding professionals and keep the details that matter to your celebration in one place.",
+    action: "Explore wedding services",
+    href: "/services",
+  },
+};
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    setError(null);
-    try {
-      const result = await signOut();
-      if (result.error) {
-        setError(result.error.message || "We couldn’t sign you out.");
-        return;
-      }
-
-      router.replace("/");
-      router.refresh();
-    } catch (signOutError) {
-      setError(
-        signOutError instanceof Error
-          ? signOutError.message
-          : "We couldn’t sign you out. Please try again.",
-      );
-    } finally {
-      setIsSigningOut(false);
-    }
-  }
+export default function DashboardWelcome({ role }: DashboardWelcomeProps) {
+  const copy = welcomeCopy[role];
+  const quickLinks = dashboardNavigation[role].slice(1);
 
   return (
-    <main className="dashboard-welcome">
-      <header className="dashboard-welcome__header">
-        <Link className="brand" href="/" aria-label="WedPlan home">
-          <span className="brand__mark">
-            <Heart size={19} strokeWidth={1.8} aria-hidden="true" />
+    <section className="dashboard-overview">
+      <div className="dashboard-overview__hero">
+        <div className="dashboard-overview__hero-copy">
+          <span className="dashboard-overview__eyebrow">
+            {role === "customer" ? (
+              <Heart size={14} aria-hidden="true" />
+            ) : (
+              <Sparkles size={14} aria-hidden="true" />
+            )}
+            {copy.eyebrow}
           </span>
-          <span>wedplan<span className="brand__period">.</span></span>
-        </Link>
-        <div className="dashboard-welcome__account">
-          <span>{name}</span>
-          <Button
-            variant="outline"
-            className="dashboard-welcome__signout"
-            type="button"
-            disabled={isSigningOut}
-            onClick={handleSignOut}
-          >
-            <LogOut size={15} aria-hidden="true" />
-            {isSigningOut ? "Signing out…" : "Sign out"}
-          </Button>
+          <h2>{copy.title}</h2>
+          <p>{copy.description}</p>
+          <Link className="dashboard-overview__action" href={copy.href}>
+            {copy.action}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
         </div>
-      </header>
+        <div className="dashboard-overview__art" aria-hidden="true">
+          <span className="dashboard-overview__art-ring" />
+          <span className="dashboard-overview__art-center">
+            <Heart size={42} strokeWidth={1.2} />
+          </span>
+          <span className="dashboard-overview__art-sparkle dashboard-overview__art-sparkle--one">
+            ✦
+          </span>
+          <span className="dashboard-overview__art-sparkle dashboard-overview__art-sparkle--two">
+            ✧
+          </span>
+        </div>
+      </div>
 
-      <section className="dashboard-welcome__content">
-        <span className="dashboard-welcome__icon">
-          {isVendor ? (
-            <Sparkles size={25} aria-hidden="true" />
-          ) : (
-            <Heart size={25} aria-hidden="true" />
-          )}
-        </span>
-        <p className="eyebrow">{isVendor ? "VENDOR SPACE" : "YOUR WEDPLAN"}</p>
-        <h1>
-          {isVendor ? "Welcome to your vendor space." : "Your day, your way."}
-        </h1>
-        <p>
-          {isVendor
-            ? `Welcome, ${name}. Your WedPlan vendor account is ready. Service management is coming soon.`
-            : `Welcome, ${name}. Start exploring the people and details that will make your wedding feel like you.`}
-        </p>
-        {error ? (
-          <p className="auth-notice auth-notice--error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <Link className="button button--primary" href="/#categories">
-          Explore wedding services <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-      </section>
-    </main>
+      <div className="dashboard-overview__section-heading">
+        <div>
+          <p className="eyebrow">YOUR WORKSPACE</p>
+          <h3>Quick access</h3>
+        </div>
+        <span>{quickLinks.length} sections</span>
+      </div>
+
+      <div className="dashboard-quick-links">
+        {quickLinks.map((item) => (
+          <Link
+            className="dashboard-quick-link"
+            href={item.href}
+            key={item.href}
+          >
+            <span className="dashboard-quick-link__icon">
+              <Heart size={17} aria-hidden="true" />
+            </span>
+            <span className="dashboard-quick-link__copy">
+              <strong>{item.label}</strong>
+              <small>{item.description}</small>
+            </span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

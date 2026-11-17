@@ -91,6 +91,14 @@ export async function POST(request: Request) {
     ) {
       return Response.json({ error: "Choose a valid event date." }, { status: 400 });
     }
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (eventDate < today) {
+      return Response.json(
+        { error: "Choose today or a future event date." },
+        { status: 400 },
+      );
+    }
 
     const serviceObjectId = new ObjectId(serviceId);
     const service = await mongoDb.collection("services").findOne({
@@ -100,6 +108,12 @@ export async function POST(request: Request) {
     });
     if (!service) {
       return Response.json({ error: "This service is no longer available." }, { status: 404 });
+    }
+    if (!service.vendorId) {
+      return Response.json(
+        { error: "This service is missing its vendor information." },
+        { status: 409 },
+      );
     }
 
     if (String(service.vendorId) === session.user.id) {
@@ -132,10 +146,7 @@ export async function POST(request: Request) {
 
     const booking = {
       serviceId: serviceObjectId,
-      vendorId:
-        service.vendorId instanceof ObjectId
-          ? service.vendorId
-          : toMongoId(String(service.vendorId)),
+      vendorId: service.vendorId,
       customerId,
       eventDate,
       eventLocation,

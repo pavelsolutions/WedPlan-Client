@@ -18,7 +18,11 @@ async function ResolveAuthRedirect() {
     return redirect("/signin");
   }
 
-  if (session.user.role === "customer" || session.user.role === "vendor") {
+  if (
+    session.user.role === "admin" ||
+    session.user.role === "customer" ||
+    session.user.role === "vendor"
+  ) {
     return redirect(`/dashboard/${session.user.role}`);
   }
 

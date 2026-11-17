@@ -1,5 +1,13 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, type Document } from "mongodb";
 import { mongoDb } from "@/lib/mongodb";
+
+type VendorDocument = Document & {
+  _id: string | ObjectId;
+  role?: string;
+  name?: string;
+  businessName?: string;
+  image?: string;
+};
 
 function isObjectIdString(value: string) {
   return /^[\da-f]{24}$/i.test(value);
@@ -36,7 +44,7 @@ export async function GET(
     }
 
     const vendor = vendorIds.length
-      ? await mongoDb.collection("user").findOne(
+      ? await mongoDb.collection<VendorDocument>("user").findOne(
           { _id: { $in: vendorIds }, role: "vendor" },
           { projection: { name: 1, businessName: 1, image: 1 } },
         )

@@ -6,7 +6,7 @@ import SiteFooter from "@/components/home/site-footer";
 import SiteNavbar from "@/components/home/site-navbar";
 import ServiceDetailPage, {
   ServiceDetailsSkeleton,
-} from "@/components/services/service-detail-page";
+} from "@/components/services/[id]/page";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {

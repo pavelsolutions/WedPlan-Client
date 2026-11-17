@@ -266,7 +266,9 @@ export async function fetchServiceDetails(
   const rawVendorId = rawService.vendorId;
   const vendorId =
     readString(rawVendorId) ??
-    (isRecord(rawVendorId) ? readString(rawVendorId._id) : null);
+    (isRecord(rawVendorId)
+      ? readString(rawVendorId._id) ?? readString(rawVendorId.$oid)
+      : null);
 
   return {
     ...normalized,

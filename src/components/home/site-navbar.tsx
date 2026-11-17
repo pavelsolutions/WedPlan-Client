@@ -38,7 +38,19 @@ export default function SiteNavbar() {
   const user = session?.user;
   const userName = user?.name?.trim() || "WedPlan member";
   const dashboardHref =
-    user?.role === "vendor" ? "/dashboard/vendor" : "/dashboard/customer";
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "vendor"
+        ? "/dashboard/vendor"
+        : user?.role === "customer"
+          ? "/dashboard/customer"
+          : "/";
+  const profileSettingsHref =
+    user?.role === "vendor"
+      ? "/dashboard/vendor/profile"
+      : user?.role === "customer"
+        ? "/dashboard/customer/profile"
+        : null;
 
   function closeMenu() {
     setMenuOpen(false);
@@ -76,15 +88,6 @@ export default function SiteNavbar() {
     } finally {
       setIsSigningOut(false);
     }
-  }
-
-  function showProfileSettingsNotice() {
-    closeMenu();
-    toast.add({
-      type: "info",
-      title: "Profile settings",
-      description: "Profile settings are coming soon.",
-    });
   }
 
   return (
@@ -167,10 +170,16 @@ export default function SiteNavbar() {
                   <LayoutDashboard aria-hidden="true" />
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={showProfileSettingsNotice}>
-                  <Settings2 aria-hidden="true" />
-                  Profile Settings
-                </DropdownMenuItem>
+                {profileSettingsHref ? (
+                  <DropdownMenuItem
+                    render={
+                      <Link href={profileSettingsHref} onClick={closeMenu} />
+                    }
+                  >
+                    <Settings2 aria-hidden="true" />
+                    Profile Settings
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
