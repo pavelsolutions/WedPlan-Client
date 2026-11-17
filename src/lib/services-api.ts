@@ -13,6 +13,18 @@ export type BrowseService = {
   isActive: true;
 };
 
+export type ServiceVendor = {
+  name: string | null;
+  businessName: string | null;
+  image: string | null;
+};
+
+export type ServiceDetails = BrowseService & {
+  images: string[];
+  vendorId: string | null;
+  vendor: ServiceVendor | null;
+};
+
 export type ServicePageResult = {
   services: BrowseService[];
   page: number;
@@ -188,6 +200,80 @@ function getServicesEndpoint() {
   endpoint.search = "";
   endpoint.hash = "";
   return endpoint;
+}
+
+export async function fetchServiceDetails(
+  id: string,
+  signal: AbortSignal,
+): Promise<ServiceDetails | null> {
+  const response = await fetch(`/api/services/${encodeURIComponent(id)}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+    signal,
+  });
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    if (response.status === 404) return null;
+    throw new Error("The service details API returned an invalid response.");
+  }
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const message =
+      isRecord(payload) && typeof payload.error === "string"
+        ? payload.error
+        : `The service details API returned HTTP ${response.status}.`;
+    throw new Error(message);
+  }
+
+  const data = isRecord(payload) ? payload.data : null;
+  const rawService =
+    isRecord(data) && isRecord(data.service)
+      ? data.service
+      : isRecord(data)
+        ? data
+        : null;
+  if (!rawService) {
+    throw new Error("The service details API returned an invalid service.");
+  }
+
+  const normalized = normalizeService(rawService);
+  if (!normalized) return null;
+
+  const rawImages = Array.isArray(rawService.images)
+    ? rawService.images
+    : [];
+  const images = [
+    ...new Set(
+      rawImages
+        .map(readHttpUrl)
+        .filter((image): image is string => image !== null),
+    ),
+  ];
+  if (images.length === 0 && normalized.image) images.push(normalized.image);
+
+  const rawVendor = isRecord(rawService.vendor) ? rawService.vendor : null;
+  const vendor = rawVendor
+    ? {
+        name: readString(rawVendor.name),
+        businessName: readString(rawVendor.businessName),
+        image: readHttpUrl(rawVendor.image),
+      }
+    : null;
+  const rawVendorId = rawService.vendorId;
+  const vendorId =
+    readString(rawVendorId) ??
+    (isRecord(rawVendorId) ? readString(rawVendorId._id) : null);
+
+  return {
+    ...normalized,
+    images,
+    vendorId,
+    vendor,
+  };
 }
 
 export async function fetchServices(

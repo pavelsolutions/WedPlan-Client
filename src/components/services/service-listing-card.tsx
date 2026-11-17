@@ -1,14 +1,7 @@
 "use client";
 
 import { ArrowRight, MapPin, Tag, UserRound } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import Link from "next/link";
 import type { BrowseService } from "@/lib/services-api";
 
 type ServiceListingCardProps = {
@@ -59,43 +52,13 @@ export default function ServiceListingCard({
             From <strong>{formatPrice(service.price)}</strong>
           </span>
         </div>
-        <Dialog>
-          <DialogTrigger className="service-listing-card__cta">
-            View Details <ArrowRight size={16} aria-hidden="true" />
-          </DialogTrigger>
-          <DialogContent className="service-details-dialog">
-            <DialogHeader>
-              <p className="eyebrow">WedPlan vendor</p>
-              <DialogTitle>{service.name}</DialogTitle>
-              <DialogDescription>
-                {service.category} · {service.location}
-              </DialogDescription>
-            </DialogHeader>
-            {service.image ? (
-              <div
-                className="service-details-dialog__image"
-                role="img"
-                aria-label={`${service.name} wedding service`}
-                style={{ backgroundImage: `url("${service.image}")` }}
-              />
-            ) : null}
-            <p className="service-details-dialog__description">
-              {service.description ||
-                "Contact the vendor to learn more about this wedding service."}
-            </p>
-            <div className="service-details-dialog__meta">
-              <span>
-                <UserRound size={16} aria-hidden="true" />
-                {service.vendorName}
-              </span>
-              <span>
-                <MapPin size={16} aria-hidden="true" />
-                {service.location}
-              </span>
-              <strong>From {formatPrice(service.price)}</strong>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Link
+          className="service-listing-card__cta"
+          href={`/services/${encodeURIComponent(service.id)}`}
+          aria-label={`View details for ${service.name}`}
+        >
+          View Details <ArrowRight size={16} aria-hidden="true" />
+        </Link>
       </div>
     </article>
   );

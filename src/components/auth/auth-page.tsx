@@ -72,6 +72,21 @@ function getDashboardPath(role: "customer" | "vendor") {
   return `/dashboard/${role}`;
 }
 
+function getSafeCallbackUrl() {
+  const callbackUrl = new URLSearchParams(window.location.search).get(
+    "callbackURL",
+  );
+  if (!callbackUrl) return null;
+
+  try {
+    const target = new URL(callbackUrl, window.location.origin);
+    if (target.origin !== window.location.origin) return null;
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export default function AuthPage({ mode }: AuthPageProps) {
   const isSignup = mode === "signup";
   const router = useRouter();
@@ -307,6 +322,13 @@ export default function AuthPage({ mode }: AuthPageProps) {
       }
 
       showAuthToast("success", "You’re signed in to WedPlan.");
+      const callbackUrl = getSafeCallbackUrl();
+      if (callbackUrl) {
+        router.replace(callbackUrl);
+        router.refresh();
+        return;
+      }
+
       const signedInRole = result.data.user.role;
       if (signedInRole === "customer" || signedInRole === "vendor") {
         router.replace(getDashboardPath(signedInRole));
