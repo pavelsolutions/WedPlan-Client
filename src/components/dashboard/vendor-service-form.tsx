@@ -3,7 +3,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ImagePlus, LoaderCircle, UploadCloud } from "lucide-react";
+import {
+  ArrowLeft,
+  BriefcaseBusiness,
+  ImagePlus,
+  LoaderCircle,
+  UploadCloud,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,12 +46,12 @@ export default function VendorServiceForm({
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(service);
 
-  useEffect(() => {
-    if (!imageFile) return;
-    const preview = URL.createObjectURL(imageFile);
-    setImagePreview(preview);
-    return () => URL.revokeObjectURL(preview);
-  }, [imageFile]);
+  useEffect(
+    () => () => {
+      if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    },
+    [imagePreview],
+  );
 
   function chooseImage(file: File | undefined) {
     setError(null);
@@ -62,6 +68,7 @@ export default function VendorServiceForm({
       setError("Choose an image smaller than 10 MB.");
       return;
     }
+    setImagePreview(URL.createObjectURL(file));
     setImageFile(file);
   }
 
@@ -70,6 +77,10 @@ export default function VendorServiceForm({
     setError(null);
     if (!category) {
       setError("Choose a service category.");
+      return;
+    }
+    if (!price.trim() || !Number.isFinite(Number(price)) || Number(price) < 0) {
+      setError("Enter a valid service price.");
       return;
     }
     if (!imageFile && !service?.images[0]) {
@@ -86,7 +97,7 @@ export default function VendorServiceForm({
       if (!imageUrl) {
         throw new Error("Upload a service image before saving.");
       }
-      const saved = await saveVendorService(
+      await saveVendorService(
         {
           serviceName: serviceName.trim(),
           category,
@@ -106,7 +117,6 @@ export default function VendorServiceForm({
       });
       router.push("/dashboard/vendor/services");
       router.refresh();
-      return saved;
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -142,7 +152,7 @@ export default function VendorServiceForm({
 
       <form className="vendor-service-form" onSubmit={handleSubmit} noValidate>
         <div className="vendor-service-form__heading">
-          <span><BriefcaseBusinessIcon /></span>
+          <span><BriefcaseBusiness size={20} aria-hidden="true" /></span>
           <div>
             <h3>Service details</h3>
             <p>Share the details that help couples find the right fit.</p>
@@ -284,8 +294,4 @@ export default function VendorServiceForm({
       </form>
     </section>
   );
-}
-
-function BriefcaseBusinessIcon() {
-  return <ImagePlus size={20} aria-hidden="true" />;
 }

@@ -1,5 +1,5 @@
-import DashboardWelcome from "@/components/auth/dashboard-welcome";
+import VendorOverview from "@/components/dashboard/vendor-overview";
 
 export default function VendorDashboardPage() {
-  return <DashboardWelcome role="vendor" />;
+  return <VendorOverview />;
 }

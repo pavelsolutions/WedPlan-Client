@@ -9,6 +9,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Crown,
+  Sparkles,
   Plus,
 } from "lucide-react";
 import {
@@ -68,6 +69,22 @@ export default function VendorOverview() {
 
   return (
     <div className="vendor-overview">
+      <section className="vendor-overview__welcome">
+        <span className="vendor-overview__welcome-icon">
+          <Sparkles size={20} aria-hidden="true" />
+        </span>
+        <div>
+          <p className="eyebrow">YOUR WEDPLAN STUDIO</p>
+          <h2>Build a business couples remember.</h2>
+          <p>Keep your listings polished and make every new booking request count.</p>
+        </div>
+        <Link className="vendor-overview__add-service" href="/dashboard/vendor/services/new">
+          <Plus size={15} aria-hidden="true" />
+          Add a service
+        </Link>
+        <span className="vendor-overview__welcome-art" aria-hidden="true" />
+      </section>
+
       {error ? (
         <VendorErrorState
           title="We couldn’t load your overview."
@@ -106,10 +123,16 @@ export default function VendorOverview() {
         </span>
         <div>
           <p className="eyebrow">YOUR CURRENT PLAN</p>
-          <h2>{isLoading ? "Checking your plan…" : `${plan?.plan === "premium" ? "Premium" : "Free"} plan`}</h2>
-          <p>
+          <h2>
             {isLoading
-              ? "Your listing allowance will appear here."
+              ? "Checking your plan…"
+              : error
+                ? "Plan unavailable"
+                : `${plan?.plan === "premium" ? "Premium" : "Free"} plan`}
+          </h2>
+          <p>
+            {isLoading || error
+              ? "Your listing allowance will appear when account data is available."
               : plan?.activeServiceLimit === null
                 ? "You can keep as many active services as your business needs."
                 : `${stats?.activeServices ?? 0} of ${plan?.activeServiceLimit ?? 3} active services used.`}
@@ -126,10 +149,6 @@ export default function VendorOverview() {
             <p className="eyebrow">YOUR BUSINESS, AT A GLANCE</p>
             <h2>Make room for what’s next</h2>
           </div>
-          <Link className="vendor-overview__add-service" href="/dashboard/vendor/services/new">
-            <Plus size={15} aria-hidden="true" />
-            Add a service
-          </Link>
         </div>
         <div className="vendor-overview__quick-links">
           <Link href="/dashboard/vendor/services">

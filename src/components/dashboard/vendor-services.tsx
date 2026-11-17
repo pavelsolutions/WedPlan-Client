@@ -250,11 +250,16 @@ export default function VendorServices() {
   }
 
   function removeService(serviceId: string) {
+    if (data?.services.length === 1 && page > 1) {
+      setPage((current) => Math.max(1, current - 1));
+    }
     setState((current) => {
       if (!current.data) return current;
       const services = current.data.services.filter(
         (service) => service.id !== serviceId,
       );
+      const total = Math.max(0, current.data.pagination.total - 1);
+      const totalPages = Math.ceil(total / current.data.pagination.limit);
       return {
         ...current,
         data: {
@@ -270,7 +275,9 @@ export default function VendorServices() {
           ),
           pagination: {
             ...current.data.pagination,
-            total: Math.max(0, current.data.pagination.total - 1),
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
           },
         },
       };

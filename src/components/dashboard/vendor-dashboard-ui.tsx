@@ -3,7 +3,13 @@ import { AlertCircle, ArrowRight, BriefcaseBusiness, RefreshCw } from "lucide-re
 import { Button } from "@/components/ui/button";
 
 export function VendorStatusBadge({ status }: { status: string }) {
-  const tone = ["pending", "approved", "rejected"].includes(status.toLowerCase())
+  const tone = [
+    "pending",
+    "approved",
+    "rejected",
+    "accepted",
+    "cancelled",
+  ].includes(status.toLowerCase())
     ? status.toLowerCase()
     : "unknown";
   const label =
@@ -13,6 +19,10 @@ export function VendorStatusBadge({ status }: { status: string }) {
         ? "Pending review"
         : tone === "rejected"
           ? "Rejected"
+          : tone === "accepted"
+            ? "Accepted"
+            : tone === "cancelled"
+              ? "Cancelled"
           : status;
   return (
     <span className={`vendor-status-badge vendor-status-badge--${tone}`}>
@@ -98,6 +108,20 @@ export function formatVendorDate(value: string | null) {
     ? "Not available"
     : new Intl.DateTimeFormat("en-US", {
         month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(date);
+}
+
+export function formatVendorEventDate(value: string | null) {
+  if (!value) return "Date not set";
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return formatVendorDate(value);
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime())
+    ? "Date not set"
+    : new Intl.DateTimeFormat("en-US", {
+        month: "long",
         day: "numeric",
         year: "numeric",
       }).format(date);

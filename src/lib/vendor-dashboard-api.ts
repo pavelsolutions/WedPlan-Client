@@ -248,7 +248,12 @@ function normalizeVendorService(value: unknown): VendorService {
 }
 
 function normalizeVendorBooking(value: unknown): VendorBooking {
-  if (!isRecord(value) || !readString(value.id) || !readString(value.status)) {
+  if (!isRecord(value)) {
+    throw new Error("The bookings API returned an invalid booking.");
+  }
+  const id = readString(value.id);
+  const status = readString(value.status);
+  if (!id || !status) {
     throw new Error("The bookings API returned an invalid booking.");
   }
   let service: VendorBooking["service"] = null;
@@ -262,8 +267,8 @@ function normalizeVendorBooking(value: unknown): VendorBooking {
   }
   const customer = isRecord(value.customer) ? value.customer : {};
   return {
-    id: value.id,
-    status: value.status.toLowerCase(),
+    id,
+    status: status.toLowerCase(),
     eventDate: readDate(value.eventDate),
     eventLocation: readString(value.eventLocation) ?? "",
     message: readString(value.message) ?? "",
@@ -314,7 +319,12 @@ export async function fetchVendorOverview(
     "pendingBookingRequests",
     "acceptedBookings",
   ] as const;
-  const statistics = {} as VendorOverview["statistics"];
+  const statistics: VendorOverview["statistics"] = {
+    totalServices: 0,
+    activeServices: 0,
+    pendingBookingRequests: 0,
+    acceptedBookings: 0,
+  };
   for (const key of keys) {
     const count = readCount(data.statistics[key]);
     if (count === null) {
@@ -375,6 +385,17 @@ export async function saveVendorService(
       method: serviceId ? "PATCH" : "POST",
       body: JSON.stringify(input),
     },
+  );
+  return normalizeVendorService(getData(payload).service);
+}
+
+export async function fetchVendorService(
+  serviceId: string,
+  signal?: AbortSignal,
+): Promise<VendorService> {
+  const payload = await requestJson(
+    `/api/vendor/services/${encodeURIComponent(serviceId)}`,
+    { signal },
   );
   return normalizeVendorService(getData(payload).service);
 }
