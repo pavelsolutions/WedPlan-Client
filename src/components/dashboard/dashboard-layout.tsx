@@ -9,6 +9,8 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleUserRound,
   CreditCard,
   Heart,
@@ -25,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -89,10 +92,12 @@ function getActiveHref(role: DashboardRole, pathname: string) {
 function DashboardSidebar({
   role,
   activeHref,
+  isCollapsed = false,
   onNavigate,
 }: {
   role: DashboardRole;
   activeHref: string;
+  isCollapsed?: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -111,7 +116,10 @@ function DashboardSidebar({
         </span>
       </Link>
 
-      <div className="dashboard-sidebar__workspace">
+      <div
+        className="dashboard-sidebar__workspace"
+        title={isCollapsed ? roleLabels[role] : undefined}
+      >
         <span className="dashboard-sidebar__workspace-icon">
           {role === "admin" ? (
             <ShieldCheck size={16} aria-hidden="true" />
@@ -128,7 +136,9 @@ function DashboardSidebar({
       </div>
 
       <nav className="dashboard-navigation" aria-label={`${roleLabels[role]} navigation`}>
-        <p className="dashboard-navigation__label">WORKSPACE</p>
+        {!isCollapsed ? (
+          <p className="dashboard-navigation__label">WORKSPACE</p>
+        ) : null}
         {dashboardNavigation[role].map((item) => {
           const Icon = dashboardIcons[item.icon];
           const isActive = item.href === activeHref;
@@ -139,10 +149,12 @@ function DashboardSidebar({
               href={item.href}
               key={item.href}
               aria-current={isActive ? "page" : undefined}
+              aria-label={isCollapsed ? item.label : undefined}
+              title={isCollapsed ? item.label : undefined}
               onClick={onNavigate}
             >
               <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className={isCollapsed ? "sr-only" : undefined}>{item.label}</span>
               {isActive ? <span className="dashboard-navigation__indicator" /> : null}
             </Link>
           );
@@ -156,8 +168,14 @@ function DashboardSidebar({
           </span>
           <p>Made for all the little details that make a wedding yours.</p>
         </div>
-        <Link href="/services" onClick={onNavigate}>
-          Explore services <ArrowUpRight size={14} aria-hidden="true" />
+        <Link
+          href="/services"
+          aria-label="Explore services"
+          title={isCollapsed ? "Explore services" : undefined}
+          onClick={onNavigate}
+        >
+          <span className={isCollapsed ? "sr-only" : undefined}>Explore services</span>
+          <ArrowUpRight size={14} aria-hidden="true" />
         </Link>
       </div>
     </div>
@@ -226,10 +244,12 @@ function DashboardProfileMenu({
         align="end"
         className="dashboard-profile-menu"
       >
-        <DropdownMenuLabel>
-          <span className="dashboard-profile-menu__name">{user.name}</span>
-          <span className="dashboard-profile-menu__email">{user.email}</span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <span className="dashboard-profile-menu__name">{user.name}</span>
+            <span className="dashboard-profile-menu__email">{user.email}</span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {profileHref ? (
           <DropdownMenuItem onClick={() => router.push(profileHref)}>
@@ -257,15 +277,20 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const activeHref = getActiveHref(role, pathname);
   const activeItem = dashboardNavigation[role].find(
     (item) => item.href === activeHref,
   );
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell${sidebarCollapsed ? " dashboard-shell--collapsed" : ""}`}>
       <aside className="dashboard-sidebar">
-        <DashboardSidebar role={role} activeHref={activeHref} />
+        <DashboardSidebar
+          role={role}
+          activeHref={activeHref}
+          isCollapsed={sidebarCollapsed}
+        />
       </aside>
 
       <div className="dashboard-main">
@@ -294,6 +319,23 @@ export default function DashboardLayout({
                 />
               </SheetContent>
             </Sheet>
+            <button
+              className="dashboard-sidebar-toggle"
+              type="button"
+              aria-label={
+                sidebarCollapsed
+                  ? "Expand dashboard navigation"
+                  : "Collapse dashboard navigation"
+              }
+              aria-pressed={sidebarCollapsed}
+              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight size={19} aria-hidden="true" />
+              ) : (
+                <ChevronLeft size={19} aria-hidden="true" />
+              )}
+            </button>
             <div>
               <p className="dashboard-header__eyebrow">{roleLabels[role]}</p>
               <h1>{activeItem?.label ?? "Dashboard"}</h1>

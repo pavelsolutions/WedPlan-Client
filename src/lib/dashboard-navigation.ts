@@ -54,6 +54,13 @@ export const dashboardNavigation: Record<DashboardRole, DashboardNavItem[]> = {
       icon: "transactions",
       description: "Keep track of platform transaction activity.",
     },
+    {
+      label: "Profile Settings",
+      href: `${dashboardRoots.admin}/profile`,
+      section: "profile",
+      icon: "profile",
+      description: "Manage your administrator account details.",
+    },
   ],
   vendor: [
     {

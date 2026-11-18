@@ -46,11 +46,13 @@ export default function SiteNavbar() {
           ? "/dashboard/customer"
           : "/";
   const profileSettingsHref =
-    user?.role === "vendor"
-      ? "/dashboard/vendor/profile"
-      : user?.role === "customer"
-        ? "/dashboard/customer/profile"
-        : null;
+    user?.role === "admin"
+      ? "/dashboard/admin/profile"
+      : user?.role === "vendor"
+        ? "/dashboard/vendor/profile"
+        : user?.role === "customer"
+          ? "/dashboard/customer/profile"
+          : null;
 
   function closeMenu() {
     setMenuOpen(false);

@@ -478,31 +478,3 @@ export async function updateVendorProfile(input: {
     ),
   );
 }
-
-export async function uploadVendorServiceImage(
-  file: File,
-  signal?: AbortSignal,
-): Promise<string> {
-  const formData = new FormData();
-  formData.append("image", file);
-  const response = await fetch("/api/upload/profile-image", {
-    method: "POST",
-    body: formData,
-    signal,
-  });
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    throw new Error("The image upload service returned an invalid response.");
-  }
-  const url = isRecord(payload) ? readUrl(payload.url) : null;
-  if (!response.ok || !url) {
-    const message =
-      isRecord(payload) && typeof payload.error === "string"
-        ? payload.error
-        : "The service image could not be uploaded.";
-    throw new Error(message);
-  }
-  return url;
-}

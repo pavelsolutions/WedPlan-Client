@@ -147,7 +147,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
     );
 
     try {
-      const response = await fetch("/api/upload/profile-image", {
+      const response = await fetch("/api/upload/signup-image", {
         method: "POST",
         body: formData,
         signal: controller.signal,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
+  AlertCircle,
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
@@ -12,6 +13,7 @@ import {
   Flower2,
   Heart,
   MapPin,
+  RefreshCw,
   Sparkles,
   Star,
   Shirt,
@@ -19,16 +21,13 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import type { WeddingCategory, WeddingService } from "@/lib/homepage-data";
+import type { WeddingCategory } from "@/lib/homepage-data";
 import { weddingCategories } from "@/lib/homepage-data";
+import { fetchServices, type BrowseService } from "@/lib/services-api";
 import SectionHeading from "./section-heading";
 import ServiceCard from "./service-card";
 import SiteFooter from "./site-footer";
 import SiteNavbar from "./site-navbar";
-
-type HomePageProps = {
-  services: WeddingService[];
-};
 
 const categoryDetails: Record<
   WeddingCategory,
@@ -163,9 +162,17 @@ function Reveal({
 function ServiceCollection({
   services,
   isLoading,
+  error,
+  isFiltered,
+  onRetry,
+  onClearFilter,
 }: {
-  services: WeddingService[];
+  services: BrowseService[];
   isLoading: boolean;
+  error: string | null;
+  isFiltered: boolean;
+  onRetry: () => void;
+  onClearFilter: () => void;
 }) {
   if (isLoading) {
     return (
@@ -183,14 +190,45 @@ function ServiceCollection({
     );
   }
 
+  if (error) {
+    return (
+      <div className="featured-services-error" role="alert">
+        <div>
+          <AlertCircle size={20} aria-hidden="true" />
+          <span>
+            <strong>Services couldn’t be loaded.</strong>
+            <small>{error}</small>
+          </span>
+        </div>
+        <Button type="button" variant="outline" onClick={onRetry}>
+          <RefreshCw size={14} aria-hidden="true" />
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
   if (services.length === 0) {
     return (
       <div className="services-empty" role="status">
         <span className="services-empty__icon">
           <Heart size={22} aria-hidden="true" />
         </span>
-        <h3>No services in this collection just yet</h3>
-        <p>Try another category or check back soon for more lovely finds.</p>
+        <h3>
+          {isFiltered
+            ? "No services in this category just yet"
+            : "No approved services are available right now"}
+        </h3>
+        <p>
+          {isFiltered
+            ? "Try another category or check back soon for more lovely finds."
+            : "Please check back soon for approved wedding professionals."}
+        </p>
+        {isFiltered ? (
+          <Button type="button" variant="outline" onClick={onClearFilter}>
+            See all services
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -206,22 +244,50 @@ function ServiceCollection({
   );
 }
 
-export default function HomePage({ services }: HomePageProps) {
+export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<WeddingCategory | null>(
     null,
   );
+  const [retryCount, setRetryCount] = useState(0);
+  const [serviceState, setServiceState] = useState<{
+    key: string;
+    services: BrowseService[];
+    error?: string;
+  }>({ key: "", services: [] });
+  const requestKey = `${retryCount}:${selectedCategory ?? "all"}`;
   const reduceMotion = useReducedMotion();
+  const isLoading = serviceState.key !== requestKey;
+  const loadError = isLoading ? null : serviceState.error ?? null;
+  const visibleServices = isLoading
+    ? []
+    : serviceState.services;
 
-  const visibleServices = useMemo(
-    () =>
-      services.filter(
-        (service) =>
-          service.approvalStatus === "approved" &&
-          service.isActive &&
-          (!selectedCategory || service.category === selectedCategory),
-      ),
-    [services, selectedCategory],
-  );
+  useEffect(() => {
+    const controller = new AbortController();
+    const filters = new URLSearchParams();
+    if (selectedCategory) filters.set("category", selectedCategory);
+    void fetchServices(filters, controller.signal, 6)
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setServiceState({
+          key: requestKey,
+          services: result.services,
+        });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setServiceState({
+          key: requestKey,
+          services: [],
+          error:
+            error instanceof Error
+              ? error.message
+              : "Please check your connection and try again.",
+        });
+      });
+
+    return () => controller.abort();
+  }, [requestKey, selectedCategory]);
 
   function showCategory(category: WeddingCategory | null) {
     setSelectedCategory(category);
@@ -389,7 +455,13 @@ export default function HomePage({ services }: HomePageProps) {
                   align="left"
                 />
                 <div className="featured__count">
-                  <span>{visibleServices.length.toString().padStart(2, "0")}</span>
+                  <span>
+                    {isLoading
+                      ? "06"
+                      : loadError
+                        ? "—"
+                        : visibleServices.length.toString().padStart(2, "0")}
+                  </span>
                   <small>thoughtful finds</small>
                 </div>
               </div>
@@ -417,7 +489,14 @@ export default function HomePage({ services }: HomePageProps) {
                 </Button>
               ))}
             </div>
-            <ServiceCollection services={visibleServices} isLoading={false} />
+            <ServiceCollection
+              services={visibleServices}
+              isLoading={isLoading}
+              error={loadError}
+              isFiltered={selectedCategory !== null}
+              onRetry={() => setRetryCount((count) => count + 1)}
+              onClearFilter={() => setSelectedCategory(null)}
+            />
             <div className="featured__foot">
               <p>
                 <BadgeCheck size={17} aria-hidden="true" />

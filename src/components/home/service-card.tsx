@@ -1,24 +1,30 @@
-import { ArrowUpRight, MapPin, Star } from "lucide-react";
-import type { WeddingService } from "@/lib/homepage-data";
+import Link from "next/link";
+import { ArrowUpRight, BadgeCheck, MapPin, Sparkles } from "lucide-react";
+import type { BrowseService } from "@/lib/services-api";
 
 type ServiceCardProps = {
-  service: WeddingService;
+  service: BrowseService;
 };
 
 export default function ServiceCard({ service }: ServiceCardProps) {
   return (
     <article className="service-card">
       <div
-        className="service-card__image"
+        className={`service-card__image${service.image ? "" : " service-card__image--empty"}`}
         role="img"
-        aria-label={service.imageAlt}
-        style={{ backgroundImage: `url("${service.image}")` }}
+        aria-label={`${service.name}${service.image ? " service photo" : ", photo unavailable"}`}
+        style={service.image ? { backgroundImage: `url("${service.image}")` } : undefined}
       >
         <span className="service-card__category">{service.category}</span>
-        <span className="service-card__rating">
-          <Star size={14} fill="currentColor" aria-hidden="true" />
-          {service.rating.toFixed(1)}
-          <span>({service.reviewCount})</span>
+        {service.image ? null : (
+          <span className="service-card__image-fallback">
+            <Sparkles size={20} aria-hidden="true" />
+            A lovely day starts here
+          </span>
+        )}
+        <span className="service-card__approved">
+          <BadgeCheck size={14} aria-hidden="true" />
+          Approved
         </span>
       </div>
       <div className="service-card__body">
@@ -31,16 +37,16 @@ export default function ServiceCard({ service }: ServiceCardProps) {
             {service.location}
           </span>
           <span>
-            From <strong>${service.startingPrice.toLocaleString()}</strong>
+            From <strong>${service.price.toLocaleString()}</strong>
           </span>
         </div>
-        <a
+        <Link
           className="service-card__link"
-          href="#how-it-works"
-          aria-label={`Learn how to plan with ${service.name}`}
+          href={`/services/${encodeURIComponent(service.id)}`}
+          aria-label={`View details for ${service.name}`}
         >
-          Find your perfect fit <ArrowUpRight size={16} aria-hidden="true" />
-        </a>
+          View service details <ArrowUpRight size={16} aria-hidden="true" />
+        </Link>
       </div>
     </article>
   );

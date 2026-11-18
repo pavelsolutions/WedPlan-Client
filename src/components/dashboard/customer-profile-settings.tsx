@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Camera, Check, RefreshCw, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
+import { Check, RefreshCw, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
+import ProfileImagePicker from "@/components/dashboard/profile-image-picker";
 import {
   fetchCustomerProfile,
   updateCustomerProfile,
@@ -19,7 +22,13 @@ type ProfileState = {
   error?: string;
 };
 
-export default function CustomerProfileSettings() {
+export default function CustomerProfileSettings({
+  accountLabel = "Customer",
+}: {
+  accountLabel?: string;
+}) {
+  const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [retryCount, setRetryCount] = useState(0);
   const [state, setState] = useState<ProfileState>({
     key: -1,
@@ -28,11 +37,14 @@ export default function CustomerProfileSettings() {
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const isLoading = state.key !== retryCount;
   const profile = isLoading ? null : state.profile;
   const loadError = isLoading ? null : state.error;
+  const hasChanges = profile !== null &&
+    (name.trim() !== profile.name || imageUrl !== (profile.image ?? ""));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -64,30 +76,8 @@ export default function CustomerProfileSettings() {
     setIsSaved(false);
 
     const trimmedName = name.trim();
-    const trimmedImageUrl = imageUrl.trim();
     if (!trimmedName || trimmedName.length > 100) {
       setSaveError("Your name must be between 1 and 100 characters.");
-      return;
-    }
-
-    let normalizedImage: string | null = null;
-    if (trimmedImageUrl) {
-      try {
-        const parsedImageUrl = new URL(trimmedImageUrl);
-        if (
-          parsedImageUrl.protocol !== "https:" &&
-          parsedImageUrl.protocol !== "http:"
-        ) {
-          throw new Error("Unsupported protocol");
-        }
-        normalizedImage = parsedImageUrl.toString();
-      } catch {
-        setSaveError("Enter a valid HTTP or HTTPS profile image URL.");
-        return;
-      }
-    }
-    if (trimmedImageUrl.length > 2048) {
-      setSaveError("The profile image URL must be 2048 characters or fewer.");
       return;
     }
 
@@ -95,16 +85,17 @@ export default function CustomerProfileSettings() {
     try {
       const updatedProfile = await updateCustomerProfile({
         name: trimmedName,
-        image: normalizedImage,
+        image: imageUrl.trim() || null,
       });
       setState({ key: retryCount, profile: updatedProfile });
       setName(updatedProfile.name);
       setImageUrl(updatedProfile.image ?? "");
       setIsSaved(true);
+      router.refresh();
       toast.add({
         type: "success",
         title: "Profile updated",
-        description: "Your customer profile has been saved.",
+        description: `Your ${accountLabel.toLowerCase()} profile has been saved.`,
       });
     } catch (error) {
       const message =
@@ -127,11 +118,11 @@ export default function CustomerProfileSettings() {
       <div className="customer-profile-page__intro">
         <p className="eyebrow">YOUR ACCOUNT</p>
         <h2>Profile settings</h2>
-        <p>Keep your personal details current for a smoother planning experience.</p>
+        <p>Keep your account details current for a smoother planning experience.</p>
       </div>
 
       {isLoading ? (
-        <div className="customer-profile-skeleton" aria-busy="true">
+        <div className="customer-profile-skeleton" aria-busy="true" aria-label="Loading profile settings">
           <span />
           <span />
           <span />
@@ -153,7 +144,12 @@ export default function CustomerProfileSettings() {
           </Button>
         </div>
       ) : (
-        <div className="customer-profile-card">
+        <motion.div
+          className="customer-profile-card"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.22 }}
+        >
           <div className="customer-profile-card__identity">
             <Avatar className="customer-profile-card__avatar">
               {imageUrl ? <AvatarImage src={imageUrl} alt="" /> : null}
@@ -162,8 +158,8 @@ export default function CustomerProfileSettings() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <span>Customer account</span>
-              <strong>{profile.name}</strong>
+              <span>{accountLabel} account</span>
+              <strong>{name || profile.name}</strong>
               <small>{profile.email}</small>
             </div>
           </div>
@@ -184,6 +180,7 @@ export default function CustomerProfileSettings() {
                 onChange={(event) => {
                   setName(event.target.value);
                   setIsSaved(false);
+                  setSaveError(null);
                 }}
                 required
               />
@@ -205,26 +202,19 @@ export default function CustomerProfileSettings() {
             </div>
 
             <div className="customer-profile-form__field">
-              <Label htmlFor="customer-profile-image">Profile image URL</Label>
-              <div className="customer-profile-form__image-field">
-                <Camera size={16} aria-hidden="true" />
-                <Input
-                  id="customer-profile-image"
-                  name="image"
-                  type="url"
-                  maxLength={2048}
-                  placeholder="https://example.com/your-photo.jpg"
-                  value={imageUrl}
-                  onChange={(event) => {
-                    setImageUrl(event.target.value);
-                    setIsSaved(false);
-                  }}
-                  aria-describedby="customer-profile-image-help"
-                />
-              </div>
-              <small id="customer-profile-image-help">
-                Add an HTTP or HTTPS image URL, or leave this blank to remove your photo.
-              </small>
+              <Label htmlFor="customer-profile-image-picker">Profile photo</Label>
+              <ProfileImagePicker
+                id="customer-profile-image-picker"
+                name={name}
+                imageUrl={imageUrl || null}
+                disabled={isSaving}
+                onImageChange={(nextImage) => {
+                  setImageUrl(nextImage ?? "");
+                  setIsSaved(false);
+                  setSaveError(null);
+                }}
+                onUploadingChange={setIsImageUploading}
+              />
             </div>
 
             {saveError ? (
@@ -241,12 +231,12 @@ export default function CustomerProfileSettings() {
 
             <div className="customer-profile-form__footer">
               <p>Your profile is only updated after you save these changes.</p>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving || isImageUploading || !hasChanges}>
                 {isSaving ? "Saving changes…" : "Save changes"}
               </Button>
             </div>
           </form>
-        </div>
+        </motion.div>
       )}
     </section>
   );

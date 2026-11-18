@@ -2,12 +2,14 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { BriefcaseBusiness, Camera, Check, RefreshCw, UserRound } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { BriefcaseBusiness, Check, RefreshCw, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
+import ProfileImagePicker from "@/components/dashboard/profile-image-picker";
 import {
   fetchVendorProfile,
   updateVendorProfile,
@@ -23,6 +25,7 @@ type ProfileState = {
 
 export default function VendorProfileSettings() {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [retryCount, setRetryCount] = useState(0);
   const [state, setState] = useState<ProfileState>({
     key: -1,
@@ -32,11 +35,16 @@ export default function VendorProfileSettings() {
   const [businessName, setBusinessName] = useState("");
   const [image, setImage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const isLoading = state.key !== retryCount;
   const profile = isLoading ? null : state.profile;
   const loadError = isLoading ? null : state.error;
+  const hasChanges = profile !== null &&
+    (name.trim() !== profile.name ||
+      businessName.trim() !== (profile.businessName ?? "") ||
+      image !== (profile.image ?? ""));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,7 +76,6 @@ export default function VendorProfileSettings() {
     setIsSaved(false);
     const trimmedName = name.trim();
     const trimmedBusinessName = businessName.trim();
-    const trimmedImage = image.trim();
     if (!trimmedName || trimmedName.length > 100) {
       setSaveError("Your name must be between 1 and 100 characters.");
       return;
@@ -78,30 +85,12 @@ export default function VendorProfileSettings() {
       return;
     }
 
-    let normalizedImage: string | null = null;
-    if (trimmedImage) {
-      try {
-        const url = new URL(trimmedImage);
-        if (url.protocol !== "http:" && url.protocol !== "https:") {
-          throw new Error("Unsupported protocol");
-        }
-        normalizedImage = url.toString();
-      } catch {
-        setSaveError("Enter a valid HTTP or HTTPS profile image URL.");
-        return;
-      }
-      if (trimmedImage.length > 2048) {
-        setSaveError("The profile image URL must be 2048 characters or fewer.");
-        return;
-      }
-    }
-
     setIsSaving(true);
     try {
       const updatedProfile = await updateVendorProfile({
         name: trimmedName,
         businessName: trimmedBusinessName || null,
-        image: normalizedImage,
+        image: image.trim() || null,
       });
       setState({ key: retryCount, profile: updatedProfile });
       setName(updatedProfile.name);
@@ -141,7 +130,7 @@ export default function VendorProfileSettings() {
       </div>
 
       {isLoading ? (
-        <div className="vendor-profile-skeleton" aria-busy="true">
+        <div className="vendor-profile-skeleton" aria-busy="true" aria-label="Loading profile settings">
           <span /><span /><span /><span />
         </div>
       ) : loadError || !profile ? (
@@ -151,7 +140,12 @@ export default function VendorProfileSettings() {
           onRetry={() => setRetryCount((count) => count + 1)}
         />
       ) : (
-        <div className="vendor-profile-card">
+        <motion.div
+          className="vendor-profile-card"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.22 }}
+        >
           <div className="vendor-profile-card__identity">
             <Avatar className="vendor-profile-card__avatar">
               {image ? <AvatarImage src={image} alt="" /> : null}
@@ -161,7 +155,7 @@ export default function VendorProfileSettings() {
             </Avatar>
             <div>
               <span>Vendor account</span>
-              <strong>{profile.businessName || profile.name}</strong>
+              <strong>{businessName || name || profile.name}</strong>
               <small>{profile.email}</small>
             </div>
           </div>
@@ -177,6 +171,7 @@ export default function VendorProfileSettings() {
                 onChange={(event) => {
                   setName(event.target.value);
                   setIsSaved(false);
+                  setSaveError(null);
                 }}
               />
             </div>
@@ -193,6 +188,7 @@ export default function VendorProfileSettings() {
                   onChange={(event) => {
                     setBusinessName(event.target.value);
                     setIsSaved(false);
+                    setSaveError(null);
                   }}
                   placeholder="Your studio or business"
                 />
@@ -204,23 +200,19 @@ export default function VendorProfileSettings() {
               <small>Email changes aren’t available in profile settings.</small>
             </div>
             <div className="vendor-form-field">
-              <Label htmlFor="vendor-profile-image">Profile image URL</Label>
-              <div className="vendor-profile-input-icon">
-                <Camera size={15} aria-hidden="true" />
-                <Input
-                  id="vendor-profile-image"
-                  name="image"
-                  type="url"
-                  maxLength={2048}
-                  value={image}
-                  onChange={(event) => {
-                    setImage(event.target.value);
-                    setIsSaved(false);
-                  }}
-                  placeholder="https://example.com/your-photo.jpg"
-                />
-              </div>
-              <small>Enter an HTTP or HTTPS image URL, or leave blank to remove the image.</small>
+              <Label htmlFor="vendor-profile-image-picker">Profile photo</Label>
+              <ProfileImagePicker
+                id="vendor-profile-image-picker"
+                name={name}
+                imageUrl={image || null}
+                disabled={isSaving}
+                onImageChange={(nextImage) => {
+                  setImage(nextImage ?? "");
+                  setIsSaved(false);
+                  setSaveError(null);
+                }}
+                onUploadingChange={setIsImageUploading}
+              />
             </div>
 
             {saveError ? <p className="vendor-form-error" role="alert">{saveError}</p> : null}
@@ -231,12 +223,12 @@ export default function VendorProfileSettings() {
             ) : null}
             <div className="vendor-profile-form__footer">
               <p>Your profile is only updated after you save these changes.</p>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving || isImageUploading || !hasChanges}>
                 {isSaving ? <><RefreshCw size={14} className="vendor-spin" aria-hidden="true" /> Saving…</> : "Save profile"}
               </Button>
             </div>
           </form>
-        </div>
+        </motion.div>
       )}
     </section>
   );

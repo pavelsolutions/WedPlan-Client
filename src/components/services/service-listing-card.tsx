@@ -21,7 +21,7 @@ export default function ServiceListingCard({
 }: ServiceListingCardProps) {
   return (
     <article className="service-listing-card">
-      <div
+      <Link href={`/services/${encodeURIComponent(service.id)}`}
         className={`service-listing-card__image${service.image ? "" : " service-listing-card__image--empty"}`}
         role="img"
         aria-label={`${service.name} wedding service`}
@@ -32,7 +32,7 @@ export default function ServiceListingCard({
         }
       >
         <span className="service-listing-card__category">{service.category}</span>
-      </div>
+      </Link>
       <div className="service-listing-card__body">
         <div className="service-listing-card__vendor">
           <UserRound size={15} aria-hidden="true" />

@@ -76,11 +76,16 @@ export default function ServiceBookingDialog({
         description: `Your request for ${service.name} has been sent to the vendor.`,
       });
     } catch (submitError) {
-      setError(
+      const message =
         submitError instanceof Error
           ? submitError.message
-          : "Your booking request could not be sent. Please try again.",
-      );
+          : "Your booking request could not be sent. Please try again.";
+      setError(message);
+      toast.add({
+        type: "error",
+        title: "Booking request wasn’t sent",
+        description: message,
+      });
     } finally {
       setIsSubmitting(false);
     }

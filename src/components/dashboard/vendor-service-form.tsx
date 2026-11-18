@@ -17,9 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import {
   saveVendorService,
-  uploadVendorServiceImage,
   type VendorService,
 } from "@/lib/vendor-dashboard-api";
+import { uploadImageToImgBB } from "@/lib/image-upload-api";
 import { weddingCategories, type WeddingCategory } from "@/lib/homepage-data";
 
 const maxImageSize = 10 * 1024 * 1024;
@@ -112,7 +112,7 @@ export default function VendorServiceForm({
     try {
       let imageUrl = service?.images[0] ?? null;
       if (imageFile) {
-        imageUrl = await uploadVendorServiceImage(imageFile);
+        imageUrl = await uploadImageToImgBB(imageFile);
       }
       if (!imageUrl) {
         throw new Error("Upload a service image before saving.");

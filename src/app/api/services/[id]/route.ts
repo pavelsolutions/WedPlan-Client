@@ -13,6 +13,20 @@ function isObjectIdString(value: string) {
   return /^[\da-f]{24}$/i.test(value);
 }
 
+function getVendorId(value: unknown): string | null {
+  if (value instanceof ObjectId) return value.toHexString();
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "$oid" in value &&
+    typeof value.$oid === "string"
+  ) {
+    return value.$oid;
+  }
+  return null;
+}
+
 export async function GET(
   _request: Request,
   context: RouteContext<"/api/services/[id]">,
@@ -34,21 +48,23 @@ export async function GET(
       return Response.json({ error: "Service not found." }, { status: 404 });
     }
 
-    const vendorId = service.vendorId;
-    const vendorIds: Array<string | ObjectId> = [];
-    if (vendorId instanceof ObjectId) {
-      vendorIds.push(vendorId, vendorId.toHexString());
-    } else if (typeof vendorId === "string") {
-      vendorIds.push(vendorId);
-      if (isObjectIdString(vendorId)) vendorIds.push(new ObjectId(vendorId));
-    }
-
-    const vendor = vendorIds.length
-      ? await mongoDb.collection<VendorDocument>("user").findOne(
-          { _id: { $in: vendorIds }, role: "vendor" },
+    const vendorId = getVendorId(service.vendorId);
+    const users = mongoDb.collection<VendorDocument>("user");
+    let vendor = null;
+    if (vendorId) {
+      if (isObjectIdString(vendorId)) {
+        vendor = await users.findOne(
+          { _id: new ObjectId(vendorId), role: "vendor" },
           { projection: { name: 1, businessName: 1, image: 1 } },
-        )
-      : null;
+        );
+      }
+      if (!vendor) {
+        vendor = await users.findOne(
+          { _id: vendorId, role: "vendor" },
+          { projection: { name: 1, businessName: 1, image: 1 } },
+        );
+      }
+    }
 
     return Response.json({
       success: true,
