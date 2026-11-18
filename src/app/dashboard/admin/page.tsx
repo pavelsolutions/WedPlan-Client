@@ -1,5 +1,5 @@
-import DashboardWelcome from "@/components/auth/dashboard-welcome";
+import AdminOverview from "@/components/dashboard/admin-overview";
 
 export default function AdminDashboardPage() {
-  return <DashboardWelcome role="admin" />;
+  return <AdminOverview />;
 }
